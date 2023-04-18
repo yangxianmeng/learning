@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="gb2312"?>
+<project name="ClassReload" default="all" basedir=".">
+
+    <!-- 环境变量 -->
+    <property environment="env"/>
+    <property name="build" value="build"/>
+    <property name="out" value="out"/>
+    <property name="src" value="src"/>
+
+    <target name="all" depends="startClean,init,make,endClean"/>
+
+    <target name="startClean">
+        <echo>========Ant编译前清理===============</echo>
+        <delete dir="${build}"/>
+        <delete file="${out}/${ant.project.name}.jar"/>
+    </target>
+
+    <target name="init">
+        <echo>========Ant编译前创建临时目录=======</echo>
+        <mkdir dir="${build}"/>
+        <mkdir dir="${out}"/>
+        <uptodate property="uptodate" targetfile="${out}/${ant.project.name}.jar">
+            <srcfiles dir="${src}" includes="*"/>
+        </uptodate>
+    </target>
+
+    <target name="make" unless="uptodate">
+        <echo>========Ant编译......==============</echo>
+        <javac destdir="${build}" debug="true" fork="true" memorymaximumsize="2048M" encoding="UTF-8"
+               includeantruntime="no">
+            <src path="${src}"/>
+        </javac>
+
+        <mkdir dir="${out}/META-INF" />
+        <manifest file="${out}/META-INF/MANIFEST.MF">
+            <attribute name="Manifest-Version" value="1.0"/>
+            <attribute name="Can-Redefine-Classes" value="true"/>
+            <attribute name="Can-Retransform-Classes" value="true"/>
+            <attribute name="Premain-Class" value="tools.ClassReload"/>
+            <attribute name="Boot-Class-Path" value="${ant.project.name}.jar"/>
+        </manifest>
+
+        <echo>========Ant打jar包=================</echo>
+        <jar manifest="${out}/META-INF/MANIFEST.MF" jarfile="${out}/${ant.project.name}.jar" basedir="${build}">
+            <include name="**/*"/>
+        </jar>
+        <checksum file="${out}/${ant.project.name}.jar"/>
+        <echo>========Ant打包完成================</echo>
+    </target>
+
+    <target name="endClean">
+        <echo>========Ant打包后清理==============</echo>
+        <delete dir="${build}"/>
+    </target>
+</project>
